@@ -405,6 +405,7 @@ fn test_voting_can_span_multiple_rounds() {
             include_public_neurons_in_full_neurons: None,
             page_number: None,
             page_size: None,
+            neuron_subaccounts: vec![],
         },
     );
 
@@ -432,6 +433,7 @@ fn test_voting_can_span_multiple_rounds() {
             include_public_neurons_in_full_neurons: None,
             page_number: None,
             page_size: None,
+            neuron_subaccounts: vec![],
         },
     );
 
