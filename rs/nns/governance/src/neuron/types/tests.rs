@@ -2,6 +2,7 @@ use super::*;
 use crate::{
     neuron::{DissolveStateAndAge, NeuronBuilder},
     pb::v1::{
+        self as pb,
         manage_neuron::{SetDissolveTimestamp, StartDissolving},
         VotingPowerEconomics,
     },
@@ -455,8 +456,7 @@ fn test_visibility_when_converting_neuron_to_neuron_info_and_neuron_proto() {
             );
             assert_eq!(neuron_info.visibility, Some(visibility as i32),);
 
-            let neuron_proto = neuron.into_proto(&VotingPowerEconomics::DEFAULT, timestamp_seconds);
-            assert_eq!(neuron_proto.visibility, Some(visibility as i32),);
+            assert_eq!(pb::Neuron::from(neuron).visibility, Some(visibility as i32),);
         }
     }
 
@@ -474,10 +474,7 @@ fn test_visibility_when_converting_neuron_to_neuron_info_and_neuron_proto() {
         );
         assert_eq!(neuron_info.visibility, None,);
 
-        let neuron_proto = neuron
-            .clone()
-            .into_proto(&VotingPowerEconomics::DEFAULT, timestamp_seconds);
-        assert_eq!(neuron_proto.visibility, None,);
+        assert_eq!(pb::Neuron::from(neuron.clone()).visibility, None,);
     }
     {
         let _restore_on_drop = temporarily_enable_private_neuron_enforcement();
@@ -491,8 +488,10 @@ fn test_visibility_when_converting_neuron_to_neuron_info_and_neuron_proto() {
         );
         assert_eq!(neuron_info.visibility, Some(Visibility::Private as i32),);
 
-        let neuron_proto = neuron.into_proto(&VotingPowerEconomics::DEFAULT, timestamp_seconds);
-        assert_eq!(neuron_proto.visibility, Some(Visibility::Private as i32),);
+        assert_eq!(
+            pb::Neuron::from(neuron).visibility,
+            Some(Visibility::Private as i32),
+        );
     }
 
     // Case 3: Known neurons are always public.
@@ -517,10 +516,10 @@ fn test_visibility_when_converting_neuron_to_neuron_info_and_neuron_proto() {
         );
         assert_eq!(neuron_info.visibility, Some(Visibility::Public as i32),);
 
-        let neuron_proto = neuron
-            .clone()
-            .into_proto(&VotingPowerEconomics::DEFAULT, timestamp_seconds);
-        assert_eq!(neuron_proto.visibility, Some(Visibility::Public as i32),);
+        assert_eq!(
+            pb::Neuron::from(neuron.clone()).visibility,
+            Some(Visibility::Public as i32),
+        );
     }
 }
 
