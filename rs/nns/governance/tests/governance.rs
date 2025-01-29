@@ -305,14 +305,6 @@ fn test_single_neuron_proposal_new() {
                             ),
                         ),
                         NeuronChange::RecentBallotsNextEntryIndex(OptionChange::BothSome(U32Change(0, 1,),),),
-                        NeuronChange::DecidingVotingPower(
-                            OptionChange::BothSome(
-                                U64Change(
-                                    1,
-                                    0,
-                                ),
-                            ),
-                        ),
                     ],
                 )]),
                 GovernanceChange::Proposals(vec![MapChange::Added(
@@ -1081,12 +1073,6 @@ async fn test_cascade_following_new() {
                     NeuronChange::RecentBallotsNextEntryIndex(OptionChange::BothSome(U32Change(
                         0, 1,
                     ),),),
-                    NeuronChange::DecidingVotingPower(OptionChange::BothSome(U64Change(
-                        1406250000, 0,
-                    ),),),
-                    NeuronChange::PotentialVotingPower(OptionChange::BothSome(U64Change(
-                        1406250000, 1265625000,
-                    ),),),
                 ],
             )]),
             GovernanceChange::Proposals(vec![MapChange::Added(
@@ -1247,9 +1233,6 @@ async fn test_cascade_following_new() {
                     NeuronChange::RecentBallotsNextEntryIndex(OptionChange::BothSome(U32Change(
                         0, 1,
                     ),),),
-                    NeuronChange::DecidingVotingPower(OptionChange::BothSome(U64Change(
-                        1406250000, 0,
-                    ),),),
                 ],
             )]),
             GovernanceChange::Proposals(vec![MapChange::Changed(
@@ -1320,9 +1303,6 @@ async fn test_cascade_following_new() {
                     1,
                     vec![
                         NeuronChange::NeuronFeesE8S(U64Change(100000000, 0)),
-                        NeuronChange::PotentialVotingPower(OptionChange::BothSome(U64Change(
-                            1265625000, 1406250000,
-                        ),),),
                     ],
                 ),
                 MapChange::Changed(
@@ -1385,9 +1365,6 @@ async fn test_cascade_following_new() {
                         NeuronChange::RecentBallotsNextEntryIndex(OptionChange::BothSome(
                             U32Change(0, 1,),
                         ),),
-                        NeuronChange::DecidingVotingPower(OptionChange::BothSome(U64Change(
-                            1406250000, 0,
-                        ),),),
                     ],
                 ),
             ]),
@@ -1531,7 +1508,7 @@ async fn test_cascade_following() {
     // Once the proposal passes
     // Check that the vote is registered in the proposing neuron.
     assert_eq!(
-        &BallotInfo {
+        &api::BallotInfo {
             proposal_id: Some(ProposalId { id: 1 }),
             vote: Vote::Yes as i32
         },
@@ -4632,20 +4609,19 @@ fn create_mature_neuron(dissolved: bool) -> (fake::FakeDriver, Governance, Neuro
         / 16;
     assert_eq!(
         gov.get_full_neuron(&id, &from).unwrap(),
-        Neuron {
+        api::Neuron {
             id: Some(id),
             account: to_subaccount.to_vec(),
             controller: Some(from),
             cached_neuron_stake_e8s: neuron_stake_e8s,
             created_timestamp_seconds: driver.now(),
             aging_since_timestamp_seconds: driver.now(),
-            dissolve_state: Some(DissolveState::DissolveDelaySeconds(dissolve_delay_seconds)),
+            dissolve_state: Some(api::neuron::DissolveState::DissolveDelaySeconds(dissolve_delay_seconds)),
             kyc_verified: true,
             visibility,
             voting_power_refreshed_timestamp_seconds: Some(START_TIMESTAMP_SECONDS),
             deciding_voting_power: Some(expected_voting_power),
             potential_voting_power: Some(expected_voting_power),
-            recent_ballots_next_entry_index: Some(0),
             ..Default::default()
         }
     );
@@ -4701,7 +4677,7 @@ fn create_mature_neuron(dissolved: bool) -> (fake::FakeDriver, Governance, Neuro
 
     let neuron = gov.get_full_neuron(&id, &from).unwrap();
 
-    (driver, gov, neuron)
+    (driver, gov, Neuron::from(neuron))
 }
 
 #[test]
@@ -6008,7 +5984,7 @@ fn test_neuron_spawn() {
     );
     assert_eq!(
         child_neuron.dissolve_state,
-        Some(DissolveState::WhenDissolvedTimestampSeconds(
+        Some(api::neuron::DissolveState::WhenDissolvedTimestampSeconds(
             driver.now()
                 + gov
                     .heap_data
@@ -6064,7 +6040,7 @@ fn test_neuron_spawn() {
     assert_eq!(child_neuron.spawn_at_timestamp_seconds, None);
     assert_eq!(
         child_neuron.dissolve_state,
-        Some(DissolveState::WhenDissolvedTimestampSeconds(
+        Some(api::neuron::DissolveState::WhenDissolvedTimestampSeconds(
             creation_timestamp
                 + gov
                     .heap_data
@@ -6223,7 +6199,7 @@ fn test_neuron_spawn_with_subaccount() {
     assert_eq!(child_neuron.spawn_at_timestamp_seconds, None);
     assert_eq!(
         child_neuron.dissolve_state,
-        Some(DissolveState::WhenDissolvedTimestampSeconds(
+        Some(api::neuron::DissolveState::WhenDissolvedTimestampSeconds(
             creation_timestamp
                 + gov
                     .heap_data
@@ -6334,7 +6310,7 @@ fn test_maturity_correctly_reset_if_spawn_fails() {
     assert_eq!(child_neuron.spawn_at_timestamp_seconds, Some(1730737555));
     assert_eq!(
         child_neuron.dissolve_state,
-        Some(DissolveState::WhenDissolvedTimestampSeconds(
+        Some(api::neuron::DissolveState::WhenDissolvedTimestampSeconds(
             creation_timestamp
                 + gov
                     .heap_data
@@ -6493,7 +6469,7 @@ fn assert_neuron_spawn_partial(
     assert_eq!(child_neuron.spawn_at_timestamp_seconds, None);
     assert_eq!(
         child_neuron.dissolve_state,
-        Some(DissolveState::WhenDissolvedTimestampSeconds(
+        Some(api::neuron::DissolveState::WhenDissolvedTimestampSeconds(
             creation_timestamp
                 + gov
                     .heap_data
@@ -6832,13 +6808,23 @@ fn test_disburse_to_neuron() {
     assert_eq!(child_neuron.aging_since_timestamp_seconds, driver.now());
     assert_eq!(
         child_neuron.dissolve_state,
-        Some(DissolveState::DissolveDelaySeconds(24 * 60 * 60))
+        Some(api::neuron::DissolveState::DissolveDelaySeconds(24 * 60 * 60))
     );
     assert_eq!(child_neuron.kyc_verified, true);
     // We expect the child's followees not to be inherited from parent.
     // Instead, child is supposed to have the default followees.
     assert_ne!(child_neuron.followees, parent_neuron.followees);
-    assert_eq!(child_neuron.followees, gov.heap_data.default_followees);
+    assert_eq!(
+        child_neuron.followees,
+        gov.heap_data
+            .default_followees
+            .iter()
+            .map(|(id, followees)| (
+                *id,
+                api::neuron::Followees::from(followees.clone()),
+            ))
+            .collect(),
+    );
     assert_eq!(
         child_neuron.voting_power_refreshed_timestamp_seconds,
         Some(driver.now()),
@@ -9499,7 +9485,7 @@ fn test_can_follow_by_subaccount_and_neuron_id() {
             .expect("Failed to get neuron");
         let f = neuron.followees.get(&(Topic::Unspecified as i32));
         assert_eq!(f, None);
-        let neuron_id_or_subaccount = make_neuron_id(&neuron);
+        let neuron_id_or_subaccount = make_neuron_id(&Neuron::from(neuron.clone()));
 
         // Start following
         gov.manage_neuron(
@@ -10740,7 +10726,7 @@ fn test_include_public_neurons_in_full_neurons() {
             ok => Some(ok as i32),
         };
 
-        Neuron {
+        api::Neuron {
             visibility,
             known_neuron_data,
 
@@ -10749,7 +10735,7 @@ fn test_include_public_neurons_in_full_neurons() {
 
             cached_neuron_stake_e8s: 10 * E8,
             controller: Some(controller),
-            dissolve_state: Some(DissolveState::DissolveDelaySeconds(8 * ONE_YEAR_SECONDS)),
+            dissolve_state: Some(api::neuron::DissolveState::DissolveDelaySeconds(8 * ONE_YEAR_SECONDS)),
             aging_since_timestamp_seconds: START_TIMESTAMP_SECONDS,
             voting_power_refreshed_timestamp_seconds: Some(START_TIMESTAMP_SECONDS),
             deciding_voting_power: Some(20 * E8),
@@ -10760,10 +10746,10 @@ fn test_include_public_neurons_in_full_neurons() {
     };
 
     let legacy_neuron = new_neuron(1, Visibility::Unspecified, None); // We say this is legacy, because its visibility is None.
-    let known_neuron = new_neuron(2, Visibility::Unspecified, Some(KnownNeuronData::default()));
+    let known_neuron = new_neuron(2, Visibility::Unspecified, Some(api::KnownNeuronData::default()));
     let explicitly_private_neuron = new_neuron(3, Visibility::Private, None);
     let explicitly_public_neuron = new_neuron(4, Visibility::Public, None);
-    let caller_controlled_neuron = Neuron {
+    let caller_controlled_neuron = api::Neuron {
         id: Some(NeuronId { id: 5 }),
         account: account(5),
         controller: Some(caller),
@@ -10773,11 +10759,11 @@ fn test_include_public_neurons_in_full_neurons() {
     let governance_proto = GovernanceProto {
         economics: Some(NetworkEconomics::default()),
         neurons: btreemap! {
-            1 => legacy_neuron.clone(),
-            2 => known_neuron.clone(),
-            3 => explicitly_private_neuron.clone(),
-            4 => explicitly_public_neuron.clone(),
-            5 => caller_controlled_neuron.clone(),
+            1 => Neuron::from(legacy_neuron.clone()),
+            2 => Neuron::from(known_neuron.clone()),
+            3 => Neuron::from(explicitly_private_neuron.clone()),
+            4 => Neuron::from(explicitly_public_neuron.clone()),
+            5 => Neuron::from(caller_controlled_neuron.clone()),
         },
         ..Default::default()
     };
@@ -10839,10 +10825,6 @@ fn test_include_public_neurons_in_full_neurons() {
         }
     }
 
-    let expected_full_neurons = expected_full_neurons
-        .into_iter()
-        .map(api::Neuron::from)
-        .collect::<Vec<_>>();
     assert_eq!(list_neurons_response.full_neurons, expected_full_neurons);
 }
 
