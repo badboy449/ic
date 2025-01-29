@@ -45,7 +45,7 @@ use ic_nns_governance_api::pb::v1::{
     },
     manage_neuron_response::{self, ClaimOrRefreshResponse},
     Empty, ExecuteNnsFunction, GetNeuronsFundAuditInfoRequest, GetNeuronsFundAuditInfoResponse,
-    Governance, GovernanceError, InstallCodeRequest, ListNeurons, ListNeuronsResponse,
+    Governance, GovernanceError, InstallCodeRequest, ListNeuronsProto, ListNeuronsResponse,
     ListNodeProviderRewardsRequest, ListNodeProviderRewardsResponse, ListProposalInfo,
     ListProposalInfoResponse, MakeProposalRequest, ManageNeuronCommandRequest, ManageNeuronRequest,
     ManageNeuronResponse, MonthlyNodeProviderRewards, NetworkEconomics, NnsFunction,
@@ -1554,7 +1554,7 @@ pub fn get_neurons_fund_audit_info(
 pub fn list_neurons(
     state_machine: &StateMachine,
     sender: PrincipalId,
-    request: ListNeurons,
+    request: ListNeuronsProto,
 ) -> ListNeuronsResponse {
     let result = state_machine
         .execute_ingress_as(
@@ -1579,7 +1579,7 @@ pub fn list_neurons(
 pub fn list_all_neurons_and_combine_responses(
     state_machine: &StateMachine,
     sender: PrincipalId,
-    request: ListNeurons,
+    request: ListNeuronsProto,
 ) -> ListNeuronsResponse {
     assert_eq!(
         request.page_number.unwrap_or_default(),
@@ -1612,7 +1612,7 @@ pub fn list_neurons_by_principal(
     list_neurons(
         state_machine,
         sender,
-        ListNeurons {
+        ListNeuronsProto {
             neuron_ids: vec![],
             include_neurons_readable_by_caller: true,
             include_empty_neurons_readable_by_caller: None,

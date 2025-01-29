@@ -9,7 +9,7 @@ use ic_nns_governance::pb::v1::{
 use ic_nns_governance_api::pb::v1::{
     governance_error::ErrorType,
     manage_neuron_response::{Command, RegisterVoteResponse},
-    BallotInfo, ListNeurons, Vote,
+    BallotInfo, ListNeuronsProto, Vote,
 };
 use ic_nns_test_utils::{
     common::NnsInitPayloadsBuilder,
@@ -398,7 +398,7 @@ fn test_voting_can_span_multiple_rounds() {
     let listed_neurons = list_all_neurons_and_combine_responses(
         &state_machine,
         *TEST_NEURON_1_OWNER_PRINCIPAL,
-        ListNeurons {
+        ListNeuronsProto {
             neuron_ids: (1..1000u64).collect(),
             include_neurons_readable_by_caller: false,
             include_empty_neurons_readable_by_caller: None,
@@ -426,7 +426,7 @@ fn test_voting_can_span_multiple_rounds() {
     let listed_neurons = list_all_neurons_and_combine_responses(
         &state_machine,
         *TEST_NEURON_1_OWNER_PRINCIPAL,
-        ListNeurons {
+        ListNeuronsProto {
             neuron_ids: (0..1000u64).collect(),
             include_neurons_readable_by_caller: false,
             include_empty_neurons_readable_by_caller: None,

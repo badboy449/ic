@@ -430,7 +430,7 @@ fn handle_list_neurons(
         .map_err(|err| ApiError::InvalidPublicKey(false, err.into()))?;
 
     // Argument for the method called on the governance canister.
-    let args = ic_nns_governance_api::pb::v1::ListNeurons {
+    let args = ic_nns_governance_api::pb::v1::ListNeuronsProto {
         neuron_ids: vec![],
         include_neurons_readable_by_caller: true,
         include_empty_neurons_readable_by_caller: None,

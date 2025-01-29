@@ -8,7 +8,7 @@ use ic_ledger_core::block::BlockType;
 use ic_nns_constants::GOVERNANCE_CANISTER_ID;
 use ic_nns_constants::LEDGER_CANISTER_ID;
 use ic_nns_governance_api::pb::v1::GovernanceError;
-use ic_nns_governance_api::pb::v1::ListNeurons;
+use ic_nns_governance_api::pb::v1::ListNeuronsProto;
 use ic_nns_governance_api::pb::v1::ListNeuronsResponse;
 use ic_rosetta_api::convert::to_hash;
 use icp_ledger::GetBlocksArgs;
@@ -175,7 +175,7 @@ pub async fn list_neurons(agent: &Agent) -> ListNeuronsResponse {
         &agent
             .query(&GOVERNANCE_CANISTER_ID.into(), "list_neurons")
             .with_arg(
-                Encode!(&ListNeurons {
+                Encode!(&ListNeuronsProto {
                     neuron_ids: vec![],
                     include_neurons_readable_by_caller: true,
                     include_empty_neurons_readable_by_caller: Some(true),
